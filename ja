@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+# Launcher for macOS and Linux. Windows users: use ja.bat.
+# Runs job_applier from the repository folder without installing anything.
+here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if [ -x "$here/.venv/bin/python" ]; then
+  py="$here/.venv/bin/python"
+elif command -v python3 >/dev/null 2>&1; then
+  py=python3
+else
+  py=python
+fi
+PYTHONPATH="$here/src" exec "$py" -m job_applier "$@"

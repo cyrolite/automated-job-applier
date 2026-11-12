@@ -1,0 +1,58 @@
+[
+  {
+    "title": "Cybersecurity Engineer (Web Security) - Information Security (2027 Graduate)",
+    "company": "Shopee Singapore Private Limited",
+    "location": "Singapore",
+    "url": "https://sg.jobstreet.com/job/93666072",
+    "posted_at": "2026-11-05",
+    "description": "The Engineering and Technology team is at the core of the Shopee platform development.\n\nResponsibilities:\n- Review code and architecture designs to catch security flaws before they ship\n- Help embed security requirements into new business and technology initiatives\n- Perform penetration testing and vulnerability assessment on web applications\n- Build tooling to automate security checks in the development pipeline\n\nRequirements:\n- Bachelor's degree in Computer Science, Information Security or related field, graduating in 2027\n- Solid understanding of web security and the OWASP top ten\n- Proficiency in Python or Java\n- Familiarity with Burp Suite and network security fundamentals\n- Strong communication skills\n\nPreferred:\n- CTF participation\n- Experience with secure code review\n- Exposure to cloud security on AWS"
+  },
+  {
+    "title": "AI Security Analysis Engineer Graduate (TikTok Shop-Security) - 2027 Start",
+    "company": "TikTok",
+    "location": "Singapore",
+    "url": "https://www.themuse.com/jobs/tiktok/ai-security-analysis-engineer-graduate-tiktok-shopsecurity-2027-start",
+    "posted_at": "2026-11-10",
+    "description": "About the team\nWe defend TikTok Shop against automated abuse at scale.\n\nResponsibilities:\n- Analyse HTTP traffic and behavioural features to characterise scraping and bot activity\n- Build detection pipelines and anomaly detection models\n- Apply large language models and AI agents to automate security analysis\n\nMinimum Qualifications:\n- Final year or recent graduate in Computer Science, Cybersecurity or a related technical discipline, graduating 2027\n- Proficiency in Python\n- Understanding of machine learning and threat detection\n- Experience with SQL and log analysis\n\nPreferred Qualifications:\n- Familiarity with LangGraph or multi-agent systems\n- Experience with RAG and vector databases\n- Prior internship in security engineering"
+  },
+  {
+    "title": "Technical Graduate Programme 2027",
+    "company": "Ensign InfoSecurity",
+    "location": "Singapore",
+    "url": "https://builtinsingapore.com/job/technical-graduate-programme-2026/9643000",
+    "deadline": "2026-12-31",
+    "description": "The Ensign Technical Graduate Programme seeks to cultivate the next generation of cybersecurity leaders. This is a four-year programme with a job rotation every two years across our business units.\n\nRequirements:\n- Fresh graduate with a degree in Computing, Information Security or Engineering\n- Foundation in network security, cryptography and digital forensics\n- Programming ability in Python, Java or C\n- Strong analytical thinking and communication skills\n\nPreferred:\n- Digital forensics or incident response exposure\n- CTF or bug bounty participation"
+  },
+  {
+    "title": "Data Engineer, Graduate Programme",
+    "company": "Singtel",
+    "location": "Singapore",
+    "url": "https://groupcareers.singtel.com/job/example",
+    "posted_at": "2026-11-01",
+    "description": "Requirements:\n- Bachelor's degree, graduating 2027\n- Experience with SQL, Python and data pipelines\n- Familiarity with ETL, data quality and dashboards\n- Exposure to Tableau or Power BI\n- Understanding of REST APIs\n\nPreferred:\n- Airflow and dbt\n- Observability and monitoring"
+  },
+  {
+    "title": "Senior Security Engineer",
+    "company": "Acme Bank",
+    "location": "Singapore",
+    "description": "Requirements:\n- 8+ years of experience in security engineering\n- Deep expertise in cloud security architecture"
+  },
+  {
+    "title": "Head of Cyber Defence",
+    "company": "Global Insurer",
+    "location": "Singapore",
+    "description": "Lead the cyber defence function. 12 years of experience required."
+  },
+  {
+    "title": "Blockchain Security Engineer",
+    "company": "Crypto Exchange Pte Ltd",
+    "location": "Singapore",
+    "description": "Requirements:\n- Fresh graduates welcome\n- Strong understanding of blockchain, smart contracts and Solidity\n- Experience auditing DeFi protocols and NFT contracts\n- Knowledge of zero knowledge proofs and EVM internals"
+  },
+  {
+    "title": "Cloud Platform Engineer Graduate",
+    "company": "Regional Telco",
+    "location": "Singapore",
+    "description": "Requirements:\n- Fresh graduate\n- Strong Kubernetes and Terraform experience\n- Deep knowledge of Istio, Helm and GitOps\n- Proficiency in Go"
+  }
+]

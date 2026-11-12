@@ -1,0 +1,76 @@
+# ---------------------------------------------------------------
+# job_applier — .gitignore
+# Keeps secrets, personal documents and generated output out of git.
+# ---------------------------------------------------------------
+
+# Secrets — NEVER commit
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials.json
+token.json
+
+# Personal documents (resume, transcript, anything identifying).
+# These stay on your machine only. The directory itself is kept so a fresh
+# clone has somewhere to put them — git cannot un-ignore a file inside an
+# ignored directory, so the contents are excluded rather than the folder.
+Context/Files/*
+!Context/Files/.gitkeep
+Context/profile.yaml
+!Context/profile.example.yaml
+
+# Generated applications + tailored documents
+applications/
+output/
+*.docx
+*.pdf
+!Context/Files/.gitkeep
+
+# Tracker database
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+venv/
+.venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Browser automation / agent state
+.playwright/
+playwright-report/
+.cache/
+*.har
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs (but keep the human-readable progress log)
+*.log
+logs/
+!PROGRESS.md

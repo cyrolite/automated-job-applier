@@ -1,0 +1,17 @@
+# Core — needed for everything
+pyyaml>=6.0
+python-docx>=1.1.0
+python-dotenv>=1.0.0
+
+# Measures the rendered PDF so the page target is enforced rather than hoped
+# for. Without it the length is estimated and reported as an estimate.
+pypdf>=4.0.0
+
+# Tailored phrasing via Claude. Leave installed even if you start without a key;
+# the tool falls back to no-model mode on its own.
+anthropic>=0.40.0
+
+# Windows + Microsoft Word: best-quality DOCX -> PDF conversion.
+# Safe to skip. Without it the tool tries LibreOffice, and the .docx is always
+# submittable as-is.
+docx2pdf>=0.1.8; sys_platform == "win32"

@@ -1,0 +1,25 @@
+Graduate Hiring - Cybersecurity Engineer
+BIT (formerly Matrixport) - Singapore
+
+BIT is a global digital asset financial services and infrastructure group.
+
+Job Responsibilities:
+- Help build and improve the company's cybersecurity framework, including designing and implementing security protection systems.
+- Analyze security threats and develop and refine security policies.
+- Take part in the secure product development process, including security reviews, code analysis, and security testing.
+- Keep up with industry trends, emerging threats, and defense mechanisms, and recommend improvements.
+- Research blockchain and smart contract security, and propose technical solutions and new ideas.
+- Prepare technical documentation and reports on cybersecurity activities.
+
+Job Requirements:
+- Fresh or recent graduates with under 2 years of full-time work experience.
+- Degree in computer science, statistics, engineering, or a related field.
+- Solid cybersecurity foundation, with familiarity with common threats and attack methods.
+- Proficiency in at least one programming language (e.g., Python, Java, C/C++).
+- Strong understanding of blockchain and smart contracts (a plus).
+- Enthusiasm for blockchain, cryptocurrency, DeFi, and NFTs, and curiosity about new technologies.
+- Dedicated, hardworking, and self-disciplined.
+- Strong critical thinking and communication skills.
+- Flexible, analytical thinker with strong problem-solving skills.
+- Proactive self-starter who handles ambiguous and high-pressure situations well.
+- Proficient in spoken and written English, with strong interpersonal and presentation skills (fluency in Mandarin a plus).

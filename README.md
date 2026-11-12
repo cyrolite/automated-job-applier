@@ -1,198 +1,407 @@
 # job_applier
 
-Job application tooling that drafts and fills, and stops at the submit button.
+**Find graduate jobs worth applying to, and get an honest, tailored application pack for each one.**
 
-Point it at a job posting. It tells you honestly how well you fit, writes a resume
-and cover letter tailored to that posting, and gives you a copy-paste sheet for the
-online form. You read it, you submit it.
+Point it at a job posting. It tells you how well you actually fit, writes a
+resume and cover letter tailored to that posting, and hands you a filled-in
+answer sheet for the online form. You read it. You submit it.
 
-**It cannot make things up.** Every line on a generated resume is traced back to a
-specific bullet in `Context/profile.yaml` and checked before it reaches a document.
-Inflated numbers, invented tools and skills attributed to the wrong employer are
-blocked automatically, and the original wording is used instead.
+It cannot make things up. Every line on a generated resume is traced back to a
+specific bullet in your own profile file and checked before it reaches a
+document. Inflated numbers, invented tools, and real skills quietly attributed
+to the wrong employer are all blocked automatically.
+
+```
+$ ja discover
+
+Searching 4 source(s): mycareersfuture, greenhouse, lever, ashby
+fetched 312 postings, 189 unique after merging, 11 worth applying to
+178 screened out
+
+ MUST    DUE  SOURCE           COMPANY                    TITLE
+----------------------------------------------------------------------------------
+ 100%  12-04  mycareersfuture  EXAMPLE TECH PTE. LTD.     Security Engineer Graduate
+  96%  12-31  greenhouse       Example Corp               Technical Graduate Programme
+  81%  11-13  mycareersfuture  ANOTHER CO PTE. LTD.       Security Engineer, Graduate
+               missing: code review
+```
 
 ---
 
-## Setup
+## Contents
 
-Double-click **`setup.bat`**, or from a terminal in this folder:
+- [What it does and does not do](#what-it-does-and-does-not-do)
+- [Requirements](#requirements)
+- [Quick start](#quick-start)
+- [Your profile is the whole point](#your-profile-is-the-whole-point)
+- [The daily workflow](#the-daily-workflow)
+- [Reading the fit report](#reading-the-fit-report)
+- [Where postings come from](#where-postings-come-from)
+- [Command reference](#command-reference)
+- [Configuration](#configuration)
+- [Troubleshooting](#troubleshooting)
+- [Privacy](#privacy)
+- [How it works](#how-it-works)
+- [Contributing](#contributing)
+
+---
+
+## What it does and does not do
+
+**It does:**
+
+- Search public job APIs and rank openings by how well you genuinely match
+- Screen out senior roles, expired postings and ones you are not eligible for
+- Write a resume tailored to each posting, using only your real experience
+- Write a short, specific cover letter
+- Tell you honestly which required skills you do not have
+- Fill in the repetitive parts of application forms
+- Track every application and chase you when one goes quiet
+
+**It does not:**
+
+- **Submit applications.** The last click is always yours. An auto-submitted
+  application is one you never read, sent under your name, and most job boards
+  prohibit it in their terms.
+- **Pad your resume.** If a posting needs a skill you lack, the report says so.
+- **Scrape LinkedIn, Indeed, Glassdoor or JobStreet.** Those have no public API
+  and their terms prohibit automated access. See
+  [Where postings come from](#where-postings-come-from) for what happens instead.
+
+---
+
+## Requirements
+
+- **Python 3.10 or newer** (`python --version` to check)
+- Optional, for PDF output: **Microsoft Word** (Windows) or **LibreOffice**
+  (any platform). Without either you still get `.docx`, which is what most
+  application systems prefer anyway.
+- Optional, for better wording: an **Anthropic API key**, or a local model via
+  **Ollama**. Everything works without one — see
+  [Do I need an API key?](#do-i-need-an-api-key)
+
+---
+
+## Quick start
+
+### 1. Get the code
+
+```bash
+git clone https://github.com/cyrolite/automated-job-applier.git
+cd automated-job-applier
+```
+
+### 2. Install
+
+**Windows** — double-click `setup.bat`, or in a terminal:
 
 ```bat
-python -m venv .venv
-.venv\Scripts\activate
+setup.bat
+```
+
+**macOS / Linux:**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-python -m job_applier init
 ```
 
-Then open `.env` and paste an API key on the `ANTHROPIC_API_KEY=` line
-(get one at https://console.anthropic.com/settings/keys).
+### 3. Create your profile
 
-You do not have to. Without a key the tool runs in **no-model mode**: it still
-scores fit, still picks the right bullets for each role, still builds the
-documents — it just reuses your original wording rather than rewriting it.
-If you would rather keep everything local, set `JA_PROVIDER=ollama` in `.env`
-and run `ollama serve`.
+This is the one step you cannot skip.
+
+```bat
+copy Context\profile.example.yaml Context\profile.yaml     :: Windows
+cp Context/profile.example.yaml Context/profile.yaml        # macOS/Linux
+```
+
+Now open `Context/profile.yaml` and replace the example person with yourself.
+The template is commented throughout. Budget half an hour; you do it once, and
+every application afterwards is built from it.
+
+### 4. Check everything works
+
+```bat
+ja init
+```
+
+```
+[ok] Folders ready: applications/, data/, prompts/
+[ok] Created .env from .env.example
+[ok] Profile loads: 9 bullets, 10 skills
+[!] No LLM provider configured. Everything still runs in no-model mode.
+    For tailored phrasing, put a key in .env:  ANTHROPIC_API_KEY=sk-ant-...
+    Or run a local model instead:               JA_PROVIDER=ollama
+[ok] Tracker ready at data\tracker.db
+```
+
+If you see your own bullet count, you are ready.
+
+> `ja` is a small launcher in the repository root: `ja.bat` on Windows, `ja` on
+> macOS and Linux. Run it from the repository folder as `ja <command>`
+> (`./ja <command>` on macOS/Linux if `.` is not on your PATH). It is only a
+> convenience — `PYTHONPATH=src python -m job_applier <command>` does the same
+> thing from anywhere.
+
+### 5. Try it on one posting
+
+Save a job description to `jd.txt`, then:
+
+```bat
+ja score -f jd.txt
+```
+
+That prints a fit report and writes nothing. If it looks useful, build the full pack:
+
+```bat
+ja apply -f jd.txt -c "Example Corp" --title "Graduate Security Engineer"
+```
 
 ---
 
-## Using it
+## Your profile is the whole point
 
-```bat
-REM 1. Find roles. Hits the public job APIs, scores each against your
-REM    profile, queues what fits.
-ja discover
+`Context/profile.yaml` is the single source of truth. The tool may only select
+and rephrase bullets that exist in it, so **anything missing from that file can
+never appear on a generated resume.**
 
-REM 2. Boards that need your own browser (LinkedIn, JobStreet, Indeed,
-REM    Glassdoor). This prints the search links; you open them.
-ja urls
-ja ingest -s linkedin -f capture.json
+Three things make it work:
 
-REM 3. See the queue, best fit first
-ja status --status discovered
+**Every bullet has a stable id.**
 
-REM 4. Is one worth applying to?
-ja score -f jd.txt
-
-REM 5. Build the full pack
-ja apply -f jd.txt -c "Acme Corp" --title "Security Engineer" --deadline 2026-12-15
-
-REM 6. Get a form fill plan for it
-ja fill acme-corp-security-engineer
-
-REM 7. What has gone quiet or is about to close
-ja followup
-
-REM 8. After you hit submit
-ja mark acme-corp-security-engineer applied
+```yaml
+- id: bigco.b1
+  text: "Analysed HTTP request patterns across production traffic to characterise
+         automated abuse, covering roughly 500,000 requests per day."
+  tags: [threat-detection, http, bot-detection]
+  metrics: ["~500,000 requests/day"]
 ```
 
-Without the `ja.bat` wrapper, every command is `python -m job_applier ...`
-with `PYTHONPATH` set to `src`.
+Generated documents cite those ids. That is what lets each line be traced back
+and verified, and it is why a rewrite that drifts from the source gets caught.
 
-### What `apply` produces
+**Real numbers belong in the text.** The verifier blocks any number not present
+in the source bullet, so "over 10,000 packets" cannot quietly become 100,000.
 
-One folder per application under `applications/`:
+**Tags decide relevance.** A security posting ranks security-tagged work above
+work that merely shares a programming language. Tag honestly and the ranking
+gets noticeably better.
+
+**Skills carry a level and evidence:**
+
+```yaml
+- name: Cryptography
+  level: working          # expert | proficient | working | exposure
+  aliases: [crypto, encryption, aes, hashing, pki]
+  tags: [security]
+  evidence: [passwords.b1]
+```
+
+`aliases` are how postings actually spell things — this is what makes matching
+work at all. `evidence` outranks a self-assessed level, so a skill you can point
+at is treated as a strength and one you cannot is reported as "claim carefully".
+
+**Keep it current.** Add every new project, internship and number as it happens.
+Every future application picks it up for free.
+
+---
+
+## The daily workflow
+
+### Find roles
+
+```bat
+ja discover
+```
+
+Hits the public job APIs, scores everything against your profile, and queues
+what fits. Add `--show-rejected` to see what was screened out and why — the
+rejections are often more informative than the matches.
+
+For LinkedIn, JobStreet, Indeed and Glassdoor:
+
+```bat
+ja urls
+```
+
+That prints correct search links with the filters already applied. Open them
+yourself, save the results as JSON, then:
+
+```bat
+ja ingest -s linkedin -f capture.json
+```
+
+### Look at the queue
+
+```bat
+ja status --status discovered
+```
+
+### Build an application
+
+For a role discovery already found, no copy-paste needed:
+
+```bat
+ja apply --from-queue example-tech-security-engineer-graduate
+```
+
+For a posting you have as text:
+
+```bat
+ja apply -f jd.txt -c "Example Corp" --title "Graduate Security Engineer" --deadline 2027-01-15
+```
+
+You get a folder under `applications/`:
 
 | File | What it is |
 |---|---|
-| `fit-report.md` | Must-have coverage, what to surface, what you genuinely lack |
-| `resume.docx` | The file to upload. ATS-safe: one column, no tables, no images |
-| `resume.pdf` | Same, converted if Word or LibreOffice is available |
+| `fit-report.md` | How well you match, what to surface, what you genuinely lack |
+| `resume.docx` | The file to upload. One column, no tables, no images — parser-friendly |
+| `resume.pdf` | Same, if Word or LibreOffice is available |
 | `resume.txt` | Plain text, for "paste your resume" boxes |
-| `resume.md` | Quick read |
-| `cover-letter.docx` / `.txt` | Short, specific, no filler |
-| `form-answers.md` | Every field the form will ask for, filled in |
+| `cover-letter.docx` / `.txt` | Short and specific |
+| `form-answers.md` | Every field the form will ask for, already answered |
+| `fill-plan.json` | Machine-readable version, after you run `ja fill` |
 | `grounding.md` | Which claims were checked, and anything that failed |
 | `jd.txt` | The posting, kept for the record |
 
+### Fill the form
+
+```bat
+ja fill example-tech-security-engineer-graduate
+```
+
+Writes `fill-plan.json`: every answer, the field labels each one matches, the
+files to upload, and platform-specific hints for Greenhouse, Lever, Ashby and
+Workday. Use it as your own checklist, or hand it to a browser agent.
+
+It stops before the submit button. Always.
+
+### Keep track
+
+```bat
+ja mark example-tech-security-engineer-graduate applied
+ja followup
+```
+
+```
+2 thing(s) need attention:
+
+  Example Corp — Graduate Security Engineer  [discovered]  closes soon and you
+      have not drafted it yet (2d left)
+  Another Co — Data Engineer Graduate  [applied]  no reply since you applied — worth
+      a polite follow-up (20d)
+```
+
+Statuses run `discovered` → `drafted` → `applied` → `screening` → `interview` →
+`offer` / `rejected` / `withdrawn`.
+
 ---
 
-## The fit report
+## Reading the fit report
 
-The score is not the point. The three lists are:
+The percentage is the least interesting part. The three lists are the product.
 
-- **Surface these** — the posting asks for it and you have real evidence. These
-  must appear on the resume.
-- **Claim carefully** — you have some exposure but thin evidence.
-- **Genuine gaps** — not in your profile. Do not claim these. If one is required,
-  the report says so, and the cover letter addresses the nearest real adjacent
-  experience instead.
+```markdown
+**Must-have coverage: 81.2%**  ·  overall keyword coverage 74.7%
+
+## Hard requirements
+- **[OK]** grad_year: targets [2027] — you graduate 2027
+
+## Surface these — you have real evidence
+- Python **[required]**  _(evidence: bigco.b2, scanner.b1)_
+- Network Security **[required]**  _(evidence: scanner.b1)_
+
+## Claim carefully — thin evidence
+- C++ **[required]** (self-assessed: working)
+
+## Genuine gaps — do not claim these
+- code review **[required]**
+
+> Required and missing: code review. Address these in the cover letter as
+> adjacent experience, or treat the role as a stretch.
+
+## Requirements the matcher could not read
+Judge these by hand. They are not counted in the score either way:
+- Comfortable operating in ambiguous, fast-moving environments
+```
+
+- **Surface these** — the posting asks for it and you can prove it. These must
+  appear on your resume.
+- **Claim carefully** — some exposure, thin evidence. Be ready to back it up.
+- **Genuine gaps** — not in your profile. Do not claim them. If one is required,
+  the report says so.
+- **Requirements the matcher could not read** — the honest part. The matcher
+  works from a fixed vocabulary, so when a posting uses wording it does not
+  know, it tells you rather than quietly scoring around it.
 
 It also checks the hard filters that silently disqualify people: years of
-experience, degree level, graduation year window, work authorisation, security
-clearance.
+experience, degree level, graduation-year windows, work authorisation, and
+security clearance.
 
----
-
-## `Context/profile.yaml`
-
-The one file worth editing by hand. Everything else is generated from it.
-
-Every bullet has a stable id (`tiktok.b2`, `pentest_ai.b1`). Generated documents
-cite those ids, which is what makes verification possible. Skills carry a
-self-assessed level and an `evidence` list pointing at the bullets that prove
-them — a skill with evidence outranks one with only a level.
-
-When something changes — a new project, a new internship, a better number —
-add it here and every future application picks it up.
-
----
-
-## Layout
-
-```
-job_applier/
-├── Context/
-│   ├── Files/              your resume + transcript PDFs
-│   └── profile.yaml        MASTER PROFILE — source of truth
-├── src/job_applier/
-│   ├── config.py           paths + settings from .env
-│   ├── profile.py          loads and indexes the profile
-│   ├── lexicon.py          281-term technical vocabulary
-│   ├── jd.py               posting intake and sectioning
-│   ├── ats.py              matching + gap report (no model needed)
-│   ├── llm.py              anthropic | ollama | none
-│   ├── tailor.py           bullet selection and rewriting
-│   ├── cover_letter.py     letter generation
-│   ├── verify.py           the grounding checks
-│   ├── render.py           DOCX / PDF / TXT / MD output
-│   ├── formfill.py         the form answer sheet
-│   ├── tracker.py          SQLite application tracker
-│   └── cli.py              commands
-├── prompts/                prompt templates, editable
-├── applications/           output, one folder per role
-├── data/tracker.db         the tracker
-├── PROGRESS.md             build log — read this when resuming
-└── .env                    your settings (gitignored)
-```
+**A low score is a useful answer.** 40% on a blockchain-heavy role when you
+have never touched blockchain is correct, and it saves you an evening.
 
 ---
 
 ## Where postings come from
 
-Three tiers, in `Context/sources.yaml`.
+Three tiers, configured in `Context/sources.yaml`.
 
 ### Tier 1 — public APIs, fully automated
 
-| Source | Endpoint | Why it is fair game |
-|---|---|---|
-| **MyCareersFuture** | `api.mycareersfuture.gov.sg/v2/jobs` | Singapore's national portal (Workforce Singapore). Public, keyless. The richest source for local roles: a real skills taxonomy, SGD salary bands, position levels and an expiry date that works as a true deadline. |
-| **Greenhouse** | `boards-api.greenhouse.io/v1/boards/{token}/jobs` | Each company's own public board feed. |
-| **Lever** | `api.lever.co/v0/postings/{token}` | Same, and it returns plain-text descriptions. |
-| **Ashby** | `api.ashbyhq.com/posting-api/job-board/{token}` | Same. |
+| Source | Why it is fair game |
+|---|---|
+| **MyCareersFuture** | Singapore's national portal (Workforce Singapore). Public, keyless. The richest source for local roles: a real skills taxonomy, salary bands, position levels, and expiry dates that work as true deadlines. |
+| **Greenhouse** | Each company's own public board feed. |
+| **Lever** | Same, and it returns plain-text descriptions. |
+| **Ashby** | Same. |
 
-Every response shape above was checked against live data, and the adapters
-pin it in their docstrings. Run `ja sources check` to confirm each configured
-board still resolves — a wrong company token is the usual cause of a silent
-empty result.
+Every response shape was verified against live data, and each adapter pins it
+in its docstring. Run `ja sources check` to confirm your configured boards still
+resolve — a wrong company token is the usual cause of a silent empty result.
 
-**SmartRecruiters is deliberately absent.** Its postings API is disallowed by
-`robots.txt`, so the tool does not touch it. Workday is absent too: it needs
+**SmartRecruiters is deliberately absent**: its postings API is disallowed by
+`robots.txt`, so the tool does not touch it. **Workday** is absent too — it needs
 per-tenant configuration that cannot be guessed.
+
+#### Adding companies you care about
+
+```bat
+ja sources add "Example Holdings Pte Ltd"
+```
+
+It strips legal suffixes to guess the board slug, asks Greenhouse, Lever and
+Ashby whether it exists, and reports what it finds. `--write` adds the winner to
+`sources.yaml`, leaving your comments intact.
+
+No board found usually means the company runs Workday, SmartRecruiters or its
+own portal, or posts only to LinkedIn and MyCareersFuture. The command says so
+rather than failing silently.
 
 ### Tier 2 — your own browser
 
 LinkedIn, JobStreet, Glassdoor and Indeed publish no job-search API, and their
-terms of use prohibit automated scraping. So this tool does not scrape them.
-What it does instead:
+terms prohibit automated scraping. So this tool does not scrape them.
 
-1. `ja urls` builds the correct search URL, filters and all. For LinkedIn that
-   means the real parameters — `f_E=1,2` for internship and entry level,
-   `f_TPR=r604800` for the past week, `f_WT` for on-site/remote/hybrid,
-   `sortBy=DD` for newest first.
-2. You open it in your own signed-in browser, or the browser agent does, at
-   human pace, reading pages you are entitled to see.
-3. The postings come back as JSON and `ja ingest` scores them exactly like the
-   API sources.
+1. `ja urls` builds the correct search URL with filters applied — for LinkedIn
+   that means the real parameters (`f_E` for experience level, `f_TPR` for
+   recency, `f_WT` for remote/hybrid, `sortBy=DD` for newest first).
+2. You open it in your own signed-in browser and read the results.
+3. Save them as JSON and `ja ingest` scores them exactly like the API sources.
 
-Nothing in the tool solves a CAPTCHA, works around a bot check or logs in for
-you. A 403, a 429 or a challenge is treated as the site saying no, and that
-source is skipped. One practical note: LinkedIn treats its own filter
-parameters as hints and returns roles that do not match them, so every posting
-is re-screened for seniority after it arrives rather than trusted.
+Nothing here solves a CAPTCHA, works around a bot check, or logs in for you. A
+403, a 429 or a challenge is treated as the site saying no, and that source is
+skipped.
 
-The capture format is documented at the top of `src/job_applier/sources/browser.py`.
-Only `title` is required; JSON, JSON Lines, CSV and TSV all work.
+One practical note: LinkedIn treats its own filter parameters as hints and
+returns roles that do not match them, so every posting is re-screened for
+seniority after it arrives rather than trusted.
+
+The capture format is documented at the top of
+`src/job_applier/sources/browser.py`. Only `title` is required; JSON, JSON
+Lines, CSV and TSV all work.
 
 ### Tier 3 — paste it
 
@@ -200,139 +409,211 @@ Only `title` is required; JSON, JSON Lines, CSV and TSV all work.
 
 ---
 
-## Screening
-
-No board filters new-grad roles reliably, so the tool judges each posting
-itself, and every decision carries a reason you can read back:
-
-- **Title seniority** — "Senior", "Staff", "Head of", "Manager", "Engineer III"
-  are dropped, unless the title also says graduate.
-- **Stated experience** — anything above `max_years_experience` goes. The
-  parser understands that "under 2 years of full-time experience" is a
-  *ceiling* on a graduate posting, not a two-year requirement.
-- **Hard blockers** — a graduation-year window you miss, a clearance you
-  cannot hold.
-- **Fit threshold** — below `min_required_score` must-have coverage, it is not
-  worth your evening.
-
-`ja discover --show-rejected` lists everything that was screened out and why,
-so you can argue with it. Both numbers live in `Context/sources.yaml`.
-
-## Duplicates
-
-The same role shows up on four boards. They collapse into one entry, and
-merging **adds** information rather than losing it: the surviving posting keeps
-the most direct apply link (a company ATS over an aggregator), takes the
-richest description found anywhere, and fills blank fields — deadline, salary,
-employment type — from whichever board knew them. `also on: indeed, linkedin`
-tells you where else it appeared.
-
-## Page length
-
-`JA_MAX_PAGES` is a constraint, not a wish. The resume is rendered, the PDF is
-measured, and if it runs over, content is trimmed and it is measured again.
-
-Trimming only ever **removes**; nothing is reworded, so a fitted resume is
-exactly as truthful as the full one. What goes first is what a reader values
-least, and a whole irrelevant role goes before a bullet is shaved off a
-relevant one:
-
-```
-summary -> extra activities -> extra projects -> the least relevant whole role
--> bullets on weaker roles -> courses, coursework, languages
-```
-
-The two most recent roles keep at least two bullets each while anything else
-can still be given up. Everything removed is listed, so you can see what one
-page costs:
-
-```
-[ok] Resume is 1 page(s), after trimming 12 item(s) to reach 1
-     trimmed to fit: activity: STANDCON CTF; project: Scooby Chatbot; ...
-     keep it all with: --pages 2
-```
-
-`--pages 2` or `--no-fit` overrides it. If no PDF converter is installed the
-length is estimated and the output says so rather than implying a measurement
-that never happened.
-
-## Finding a company's board
-
-`sources.yaml` is only as useful as the company tokens in it, and finding those
-by hand means opening a careers page, following a redirect and reading a slug
-out of a URL.
-
-```bat
-ja sources add "Shopee Singapore Private Limited"
-```
-
-It strips legal suffixes (`Pte Ltd`, `Private Limited`, `Holdings Inc`) to guess
-the slug, then asks Greenhouse, Lever and Ashby whether it exists — a handful of
-rate-limited requests. `--write` adds the winner to `sources.yaml`, leaving every
-comment in place.
-
-No board found usually means the company runs Workday, SmartRecruiters or its own
-portal, or posts only to LinkedIn and MyCareersFuture. The command says so rather
-than failing silently.
-
-## The fill plan
-
-`ja fill <slug>` writes `fill-plan.json` into the application folder: every
-answer, the labels each one should be matched against, the field kind, the
-files to upload, and per-platform selector hints for Greenhouse, Lever, Ashby
-and Workday.
-
-`stop_before_submit` is always true. The plan also carries a `never_do` list —
-no submitting, no consent checkboxes, no demographic questions, no CAPTCHA
-solving, no account creation. Hand the file to the browser agent, or use it as
-your own checklist.
-
-The last click is yours. That is not a missing feature: an auto-submitted
-application is one you never read, sent under your name, and most boards'
-terms prohibit it.
-
----
-
-## What this deliberately does not do
-
-It does not submit applications. Auto-submitting means sloppy applications going
-out under your name, and it breaches the terms of most job boards. The agent gets
-you to a filled form you can check in a few seconds.
-
-It does not pad your resume. If you lack a required skill, the report says so.
-
----
-
-## Commands
+## Command reference
 
 | Command | What it does |
 |---|---|
 | `ja init` | Check setup, create `.env` |
-| `ja sources list` / `check` | Show configured sources, or verify each one resolves |
 | `ja discover` | Search the public APIs, score, queue what fits |
 | `ja urls` | Search links for the browser-only boards |
 | `ja ingest -s <board> -f <file>` | Score postings captured from your browser |
-| `ja score -f jd.txt` | Gap report only, no documents, no model needed |
-| `ja apply -f jd.txt` | Full application pack |
-| `ja apply --from-queue <slug>` | Same, for a role already discovered — no paste |
+| `ja sources list` | Show configured sources |
+| `ja sources check` | Verify each configured board resolves |
 | `ja sources add "Company"` | Find which job board a company runs on |
+| `ja score -f jd.txt` | Fit report only. No documents, no API key needed |
+| `ja apply -f jd.txt` | Full application pack |
+| `ja apply --from-queue <slug>` | Same, for a discovered role — no paste needed |
 | `ja fill <slug>` | Form fill plan that stops at submit |
 | `ja status [--status X]` | The tracker |
-| `ja show <slug>` | One application, with history |
+| `ja show <slug>` | One application, with its history |
 | `ja due [--days N]` | Deadlines coming up |
 | `ja followup [--days N]` | What has gone quiet or is about to close |
-| `ja mark <slug> <status>` | Update status |
+| `ja mark <slug> <status>` | Update a status |
 
-Statuses: `discovered` → `drafted` → `applied` → `screening` → `interview` →
-`offer` / `rejected` / `withdrawn`.
+Useful flags for `apply`: `--pages 2` (keep more content), `--no-llm` (skip the
+model), `--no-cover-letter`, `--no-pdf`, `--deadline YYYY-MM-DD`.
 
-## Tests
+Useful flags for `discover` and `ingest`: `--show-rejected`, `--dry-run`,
+`--min-score N`, `--max-years N`. `discover` also takes `--limit N` and
+`--keep-blocked` (show roles with a hard blocker anyway).
 
-```bat
+---
+
+## Configuration
+
+### `.env` — secrets and output settings
+
+```ini
+JA_PROVIDER=anthropic          # anthropic | ollama | none
+ANTHROPIC_API_KEY=             # paste a key here, or leave blank
+JA_MODEL=claude-sonnet-5-5
+JA_MAX_PAGES=1                 # resume page target, enforced
+JA_BULLETS_PER_ROLE=3
+JA_OLLAMA_HOST=http://localhost:11434
+JA_DB_PATH=                    # optional: move the tracker off a synced drive
+```
+
+### Do I need an API key?
+
+No. Without one the tool runs in **no-model mode**: it still scores fit, still
+picks the right bullets for each posting, still builds every document — it just
+reuses your original wording instead of rewriting it per role. The gap reports
+are identical.
+
+With a key, bullets get rephrased to match the posting's language (within the
+grounding rules) and you get a real cover letter.
+
+Prefer to keep everything local? Set `JA_PROVIDER=ollama` and run `ollama serve`.
+Nothing leaves your machine.
+
+### `Context/sources.yaml` — where to search
+
+```yaml
+search_terms:
+  - security engineer graduate
+  - data engineer graduate
+
+screening:
+  max_years_experience: 2      # drop postings asking for more
+  min_required_score: 45       # drop postings below this coverage
+  max_per_source: 300
+
+company_boards:
+  - ats: greenhouse
+    token: example-corp
+    company: Example Corp
+```
+
+Tune `min_required_score` to taste. Too high and you miss stretch roles worth a
+shot; too low and you drown. Start at 45 and adjust once you have seen a week of
+results.
+
+### Page length
+
+`JA_MAX_PAGES` is a constraint, not a wish. The resume is rendered, the PDF is
+measured, and if it runs over, content is trimmed and measured again.
+
+Trimming only ever **removes** — nothing is reworded — so a fitted resume is
+exactly as truthful as the full one. What goes first is what a reader values
+least, and a whole irrelevant role goes before a bullet is shaved off a relevant
+one:
+
+```
+summary → extra activities → extra projects → the least relevant whole role
+→ bullets on weaker roles → courses, coursework, languages
+```
+
+The two most recent roles keep at least two bullets each while anything else can
+still be given up. Everything removed is listed, so you can see the cost:
+
+```
+[ok] Resume is 1 page(s), after trimming 12 item(s) to reach 1
+     trimmed to fit: activity: Example CTF; project: Chatbot; role: Tuition Teacher ...
+     keep it all with: --pages 2
+```
+
+---
+
+## Troubleshooting
+
+**`Profile not found` / `ja init` fails**
+You have not created `Context/profile.yaml` yet. Copy
+`Context/profile.example.yaml` and fill it in.
+
+**`ja discover` returns nothing**
+Run `ja sources check`. A company board with a wrong token fails silently during
+discovery but is reported there. Also try `--show-rejected` — your
+`min_required_score` may simply be too high.
+
+**`ja sources add` finds no board**
+That company probably uses Workday, SmartRecruiters or its own portal. Open
+their careers page, follow the redirect, and read the slug out of the URL.
+
+**No PDF is produced**
+No converter is installed. Install LibreOffice, or just upload the `.docx` —
+most application systems prefer it. Page length will be estimated rather than
+measured, and the output says so.
+
+**`Documents are saved, but the tracker could not be updated`**
+SQLite cannot lock files on some network and synced drives. Set `JA_DB_PATH` in
+`.env` to a local path.
+
+**A posting scores lower than it should**
+The matcher works from a fixed vocabulary. Check the "Requirements the matcher
+could not read" section — if the posting's wording is unusual, that is why.
+Adding good `aliases` to your skills helps a lot.
+
+**A generated bullet reverted to my original wording**
+That rewrite failed the grounding check. `grounding.md` says exactly which claim
+and why. This is the system working.
+
+---
+
+## Privacy
+
+Your resume, transcript, profile, generated documents, tracker and API key are
+all gitignored and never leave your machine, except for job-description text
+sent to your configured model provider — or nothing at all, if you use Ollama or
+no model.
+
+If you fork this, check `git status` before your first commit. `profile.yaml`
+holds your phone number and email.
+
+---
+
+## How it works
+
+```
+job_applier/
+├── Context/
+│   ├── Files/                  your resume + transcript           (gitignored)
+│   ├── profile.yaml            YOUR PROFILE — source of truth     (gitignored)
+│   ├── profile.example.yaml    the template to copy
+│   └── sources.yaml            where to search, screening thresholds
+├── src/job_applier/
+│   ├── profile.py              loads and indexes your profile by bullet id
+│   ├── lexicon.py              technical vocabulary for matching
+│   ├── jd.py                   posting intake and section tagging
+│   ├── ats.py                  matching, gap report, hard filters
+│   ├── filters.py              new-grad screening, with reasons
+│   ├── verify.py               the grounding checks
+│   ├── tailor.py               bullet selection and rewriting
+│   ├── cover_letter.py         letter generation
+│   ├── render.py               DOCX / PDF / TXT / MD output
+│   ├── pagefit.py              measures and enforces the page target
+│   ├── formfill.py             human-readable answer sheet
+│   ├── fillplan.py             machine-readable fill plan
+│   ├── discover.py             fetch → merge → screen → score → rank → queue
+│   ├── net.py                  polite HTTP: robots.txt, rate limits
+│   ├── boardlookup.py          finds a company's job board
+│   ├── followup.py             deadline and silence nudges
+│   ├── tracker.py              SQLite tracker and event log
+│   ├── sources/                one adapter per job board
+│   └── cli.py                  the commands
+├── prompts/                    prompt templates, editable
+├── samples/                    example job description and capture file
+└── applications/               your output                        (gitignored)
+```
+
+The pipeline is deterministic end to end except for the optional rewriting step:
+the same postings always produce the same queue, and every rejection carries a
+reason you can read back.
+
+---
+
+## Contributing
+
+```bash
 python -m unittest discover -s tests
 ```
 
-137 tests. The ones that matter most are the grounding checks, which stop a
-fabricated claim reaching a document, and the source-parser fixtures, which are
-copied from live API responses so a provider changing its shape fails here
-rather than mid-run.
+137 tests. The ones that matter most:
+
+- **Grounding tests** — these stop a fabricated claim reaching a document. If
+  you change `verify.py`, these are the contract.
+- **Source parser fixtures** — copied from live API responses, so a provider
+  changing its shape fails here rather than mid-run.
+
+If you add a job board, subclass `sources.base.Source`, normalise into
+`Posting`, and add a fixture test from a real response. If the board has no
+public API, it belongs in the browser-assisted tier — do not add a scraper.

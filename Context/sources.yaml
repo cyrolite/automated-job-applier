@@ -1,0 +1,94 @@
+# ============================================================
+# Where postings come from.
+#
+# Three tiers:
+#   api     — public, keyless endpoints. Fully automated.
+#   browser — no public API and terms that prohibit scraping. You open the
+#             search in your own browser; `ja ingest` takes it from there.
+#   manual  — paste a posting into a file and run `ja apply -f`.
+#
+# After editing company_boards, run:  ja sources check
+# That hits each board once and tells you which tokens actually resolve,
+# instead of failing silently during a discovery run.
+# ============================================================
+
+# Searched across every keyword-driven source.
+search_terms:
+  - security engineer graduate
+  - cybersecurity engineer fresh graduate
+  - application security engineer graduate
+  - detection engineering graduate
+  - security analyst entry level
+  - graduate programme technology
+  - data engineer graduate
+  - machine learning engineer graduate
+  - ai engineer graduate
+
+# How strict discovery is.
+screening:
+  max_years_experience: 2     # drop postings asking for more
+  min_required_score: 45      # drop postings below this must-have coverage (%)
+  max_per_source: 300
+
+# ---------------------------------------------------------------
+# Tier 1: public APIs. Verified live — response shapes are pinned
+# in the adapter docstrings.
+# ---------------------------------------------------------------
+mycareersfuture:
+  enabled: true               # Singapore's national portal (Workforce Singapore)
+  max_per_keyword: 100
+  min_salary: 0
+  sort_by: new_posting_date
+
+# Per-company boards. `token` is the slug in the board's own URL:
+#   boards.greenhouse.io/TOKEN   jobs.lever.co/TOKEN   jobs.ashbyhq.com/TOKEN
+# The three below are confirmed working and are here as a template.
+# Add the companies you actually care about, then run `ja sources check`.
+company_boards:
+  - ats: greenhouse
+    token: anthropic
+    company: Anthropic
+  - ats: lever
+    token: palantir
+    company: Palantir
+  - ats: ashby
+    token: ramp
+    company: Ramp
+
+  # Add your targets here, for example:
+  # - ats: greenhouse
+  #   token: stripe
+  #   company: Stripe
+  # - ats: lever
+  #   token: csit
+  #   company: CSIT
+  #
+  # To find a token: open the company's careers page and look at the URL it
+  # redirects to. If it contains boards.greenhouse.io, job-boards.greenhouse.io,
+  # jobs.lever.co or jobs.ashbyhq.com, the slug after it is the token.
+  # Workday and SmartRecruiters are not supported: SmartRecruiters' robots.txt
+  # disallows their postings API, and Workday needs per-tenant configuration.
+
+# ---------------------------------------------------------------
+# Tier 2: browser-assisted. These build search URLs only.
+# Nothing is fetched automatically, by design.
+# ---------------------------------------------------------------
+browser_boards:
+  linkedin:
+    enabled: true
+    location: Singapore
+    experience: [internship, entry]
+    job_type: [full-time]
+    posted_within: week
+  jobstreet:
+    enabled: true
+    location: Singapore
+  mycareersfuture_web:
+    enabled: false            # the API above covers this better
+  indeed:
+    enabled: true
+    location: Singapore
+    days: 7
+  glassdoor:
+    enabled: true
+    location: Singapore

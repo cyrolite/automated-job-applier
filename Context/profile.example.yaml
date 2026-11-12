@@ -1,0 +1,231 @@
+# ============================================================
+# MASTER PROFILE — template
+#
+# Copy this to `Context/profile.yaml` and replace everything with your own
+# facts. That file is gitignored; this one is not.
+#
+#   copy Context\profile.example.yaml Context\profile.yaml     (Windows)
+#   cp   Context/profile.example.yaml Context/profile.yaml     (macOS/Linux)
+#
+# THIS FILE IS THE WHOLE POINT. The tool may only select and rephrase bullets
+# that exist here. It cannot invent a claim, so anything missing from this file
+# can never appear on a generated resume. Keep it honest and keep it current.
+#
+# Two rules that make the grounding checks work:
+#   1. Every bullet needs a unique, stable `id`. Generated documents cite those
+#      ids, and that is what lets each line be traced back and verified.
+#   2. Put real numbers in the bullet text. The verifier blocks any number that
+#      is not in the source bullet, so "over 10,000 packets" stays accurate and
+#      cannot quietly become 100,000.
+# ============================================================
+
+meta:
+  name: Jane Tan Wei Ling
+  email: jane.tan@example.edu
+  phone: "+65 9123 4567"
+  location: Singapore
+  citizenship: Singapore
+  linkedin: https://www.linkedin.com/in/example/
+  github: https://github.com/example
+  # Used to answer work-authorisation questions on application forms.
+  work_authorisation:
+    singapore: Citizen / no sponsorship required
+    other: Requires sponsorship
+  languages:
+    - English (Proficient)
+    - Mandarin (Proficient)
+
+job_search:
+  # Drives fit scoring and how cover letters are framed.
+  targets:
+    - new grad full-time, 2027 start
+    - graduate programmes / rotational
+  open_to_relocation: true
+  open_to_remote: true
+  earliest_start: 2027-06
+  graduation: 2027-05
+  # Used to rank postings. List the kinds of work you actually want.
+  preferred_domains:
+    - security engineering
+    - data engineering
+    - machine learning
+
+education:
+  - id: uni
+    institution: National University of Singapore
+    degree: Bachelor of Computing in Computer Science
+    second_major: Mathematics          # delete if you have none
+    start: 2023-08
+    end: 2027-05
+    gpa: "4.50 / 5"
+    standing: Year 4 Undergraduate
+    location: Singapore
+    # Coursework is prime keyword real estate. List modules relevant to the
+    # roles you want, not every module you took.
+    highlights:
+      - id: uni.c1
+        text: "Relevant coursework: Computer Security, Computer Networks, Operating Systems, Software Engineering, Data Structures and Algorithms"
+        tags: [security, networks, os, software-engineering, algorithms]
+      - id: uni.c2
+        text: "Mathematics second major: Linear Algebra, Probability and Statistics, Mathematical Analysis"
+        tags: [mathematics, statistics, quantitative]
+    # Facts you can prove from a transcript, for GPA-gated graduate programmes.
+    transcript_facts:
+      - "Cumulative GPA 4.50 / 5.00"
+      - "A grades in Computer Networks and Linear Algebra"
+
+# Most recent first. Internships, part-time work and teaching all belong here.
+experience:
+  - id: bigco
+    org: Example Technology Pte Ltd
+    title: Security Engineer Intern
+    start: 2026-05
+    end: 2026-08
+    location: Singapore
+    # Tags drive domain matching: a security posting ranks security-tagged
+    # work above work that merely shares a programming language.
+    tags: [security, detection, python, data-analysis]
+    bullets:
+      - id: bigco.b1
+        text: "Analysed HTTP request patterns across production traffic to characterise automated abuse, covering roughly 500,000 requests per day."
+        tags: [threat-detection, http, bot-detection, data-analysis]
+        metrics: ["~500,000 requests/day"]
+      - id: bigco.b2
+        text: "Built a Python service that flagged anomalous sessions for review, reducing manual triage time for the on-call team."
+        tags: [python, automation, detection]
+        metrics: []
+
+  - id: startup
+    org: Example Analytics
+    title: Data Engineering Intern
+    start: 2025-05
+    end: 2025-08
+    location: Singapore
+    tags: [data-engineering, pipelines, sql, python]
+    bullets:
+      - id: startup.b1
+        text: "Built and monitored ETL pipelines feeding 12 internal dashboards, adding alerting that caught failures before stakeholders noticed."
+        tags: [data-engineering, etl, monitoring, alerting]
+        metrics: ["12 dashboards"]
+      - id: startup.b2
+        text: "Wrote SQL transformations over roughly 40 million rows to standardise reporting across three regional teams."
+        tags: [sql, data-modelling, data-quality]
+        metrics: ["~40 million rows", "3 regional teams"]
+
+projects:
+  - id: scanner
+    name: Vulnerability Scanner
+    start: 2026-01
+    end: present
+    tags: [security, python, networks]
+    link: https://github.com/example/scanner      # or null
+    bullets:
+      - id: scanner.b1
+        text: "Built a Python scanner that fingerprints services across a subnet and cross-references findings against public CVE data."
+        tags: [security, vulnerability-management, networks, python]
+        metrics: []
+
+  - id: passwords
+    name: Password Manager
+    start: 2025-01
+    end: 2025-04
+    tags: [cryptography, web, security]
+    link: null
+    bullets:
+      - id: passwords.b1
+        text: "Built a web application storing credentials with AES encryption, including login, logout and session handling."
+        tags: [cryptography, aes, web, authentication, security]
+        metrics: []
+
+# Competitions, societies, volunteering, leadership.
+activities:
+  - id: ctf
+    name: Example Capture the Flag
+    role: Team Leader
+    start: 2026-02
+    end: 2026-02
+    tags: [ctf, leadership, reverse-engineering]
+    bullets:
+      - id: ctf.b1
+        text: "Led a team of 4 through over 15 challenges spanning web exploitation, forensics and reverse engineering, placing in the top 10."
+        tags: [ctf, leadership, reverse-engineering, web-security]
+        metrics: ["team of 4", "15+ challenges", "top 10"]
+
+# ------------------------------------------------------------
+# Skill inventory. Keyword matching against job descriptions runs off this.
+#
+#   level     expert | proficient | working | exposure
+#             Be honest. A skill with no evidence and only `exposure` is
+#             reported as "claim carefully" rather than a strength.
+#   aliases   how postings actually spell it. This is what makes matching work:
+#             a posting saying "k8s" or "LLMs" should still find you.
+#   evidence  bullet ids that prove it. Evidence outranks a self-assessed
+#             level, so fill this in wherever you can.
+# ------------------------------------------------------------
+skills:
+  - name: Python
+    level: proficient
+    aliases: [python3, py]
+    tags: [programming]
+    evidence: [bigco.b2, scanner.b1]
+  - name: SQL
+    level: proficient
+    aliases: [mysql, postgresql, postgres, sqlite, rdbms]
+    tags: [data]
+    evidence: [startup.b2]
+  - name: Java
+    level: working
+    aliases: []
+    tags: [programming]
+    evidence: []
+  - name: Network Security
+    level: working
+    aliases: [network security, networking, tcp/ip, protocols]
+    tags: [security]
+    evidence: [scanner.b1]
+  - name: Cryptography
+    level: working
+    aliases: [crypto, encryption, aes, hashing, pki]
+    tags: [security]
+    evidence: [passwords.b1]
+  - name: Threat Detection
+    level: working
+    aliases: [detection engineering, anomaly detection, bot detection, siem]
+    tags: [security]
+    evidence: [bigco.b1, bigco.b2]
+  - name: Data Engineering
+    level: working
+    aliases: [data pipelines, etl, elt, pipeline, data quality, airflow]
+    tags: [data]
+    evidence: [startup.b1, startup.b2]
+  - name: Linux
+    level: working
+    aliases: [unix, bash, shell]
+    tags: [engineering]
+    evidence: []
+  - name: Git
+    level: working
+    aliases: [github, version control]
+    tags: [engineering]
+    evidence: []
+  - name: Statistics
+    level: working
+    aliases: [probability, statistical analysis, quantitative]
+    tags: [mathematics]
+    evidence: [uni.c2]
+
+certifications_courses:
+  - Example Security Fundamentals Certificate
+  - Intro to Machine Learning
+
+# ------------------------------------------------------------
+# Reusable answers for application forms. These go into form-answers.md and
+# fill-plan.json, so you type them once rather than once per application.
+# ------------------------------------------------------------
+form_answers:
+  notice_period: "Available from June 2027 upon graduation"
+  salary_expectation: "Open to discussion, aligned with market rate for 2027 graduates"
+  requires_visa_singapore: "No"
+  willing_to_relocate: "Yes"
+  disability_status: "Prefer not to say"
+  how_did_you_hear: "Company careers page"
